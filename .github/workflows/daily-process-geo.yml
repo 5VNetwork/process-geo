@@ -9,6 +9,8 @@ on:
 jobs:
   process-geo:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create/update releases
     
     steps:
       - name: Checkout code
