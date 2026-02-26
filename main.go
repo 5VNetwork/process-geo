@@ -26,7 +26,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	geocode := []string{"cn", "apple-cn", "google-cn", "tld-cn", "private", "category-games", "gfw"}
+	geocode := []string{"cn", "apple-cn", "google-cn", "google", "tld-cn", "private", "category-games", "gfw"}
 	geoipcode := []string{"private", "cn", "telegram", "google", "facebook", "twitter", "tor"}
 	geositePath := "geosite.dat"
 	geoipPath := "geoip.dat"
