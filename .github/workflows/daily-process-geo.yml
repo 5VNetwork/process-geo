@@ -76,15 +76,18 @@ jobs:
 
       - name: Delete releases older than 7 days
         uses: actions/github-script@v7
+        env:
+          CURRENT_TAG: ${{ env.TAG_NAME }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const daysToKeep = 7;
             const cutoff = new Date();
             cutoff.setDate(cutoff.getDate() - daysToKeep);
+            const currentTag = process.env.CURRENT_TAG;
 
             // List all releases (paginated)
-            const releases = await github.paginate(
+            const allReleases = await github.paginate(
               github.rest.repos.listReleases,
               {
                 owner: context.repo.owner,
@@ -93,11 +96,20 @@ jobs:
               }
             );
 
+            // Operate only on published stable releases
+            const releases = allReleases
+              .filter((rel) => !rel.draft && !rel.prerelease)
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            // Extra safety: always keep the newest stable release
+            const newestReleaseId = releases[0]?.id;
+
             for (const rel of releases) {
               const created = new Date(rel.created_at);
 
-              // Skip drafts and prereleases just in case
-              if (rel.draft || rel.prerelease) continue;
+              // Never delete the newest release, or the current run's tag
+              if (rel.id === newestReleaseId) continue;
+              if (currentTag && rel.tag_name === currentTag) continue;
 
               if (created < cutoff) {
                 core.info(`Deleting release ${rel.id} (${rel.tag_name}) created at ${rel.created_at}`);
