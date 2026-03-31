@@ -15,6 +15,11 @@ var geoIpUrl = "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release
 var geoSiteUrl = "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
 
 func main() {
+	cn()
+	ru()
+}
+
+func cn() {
 	var err error
 	err = util.DownloadToFile(geoIpUrl, http.DefaultClient, "geoip.dat")
 	if err != nil {
@@ -61,36 +66,52 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = os.WriteFile(dstGeositePath, geositeBytes, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	geoipBytes, err := proto.Marshal(geoIpList)
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = os.WriteFile(dstGeoipPath, geoipBytes, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
-	tempGeosite := dstGeositePath + ".tmp"
-	err = os.WriteFile(tempGeosite, geositeBytes, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = os.Rename(tempGeosite, dstGeositePath)
-	if err != nil {
-		// Clean up temporary file if rename fails
-		os.Remove(tempGeosite)
-		log.Fatal(err)
-	}
+const russiaGeoSiteUrl = "https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geosite.dat"
+const russiaGeoIpUrl = "https://raw.githubusercontent.com/runetfreedom/russia-v2ray-rules-dat/release/geoip.dat"
 
-	tempGeoIpFile := dstGeoipPath + ".tmp"
-	err = os.WriteFile(tempGeoIpFile, geoipBytes, 0644)
+func ru() {
+	err := util.DownloadToFile(russiaGeoSiteUrl, http.DefaultClient, "geosite_ru.dat")
 	if err != nil {
-		log.Fatal(err)
-	}
-	err = os.Rename(tempGeoIpFile, dstGeoipPath)
-	if err != nil {
-		// Clean up temporary file if rename fails
-		os.Remove(tempGeoIpFile)
 		log.Fatal(err)
 	}
 
+	geositeList := &geo.GeoSiteList{
+		Entry: []*geo.GeoSite{},
+	}
+
+	l := memconservative.NewMemConservativeLoader()
+	ruSite, err := l.LoadSite("geosite_ru.dat", "ru-blocked")
+	if err != nil {
+		log.Fatal(err)
+	}
+	geositeList.Entry = append(geositeList.Entry, ruSite)
+
+	// ruInside, err := l.LoadSite("geosite_ru.dat", "ru-available-only-inside")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// geositeList.Entry = append(geositeList.Entry, ruInside)
+
+	geositeBytes, err := proto.Marshal(geositeList)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = os.WriteFile("simplified_geosite_ru.dat", geositeBytes, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
