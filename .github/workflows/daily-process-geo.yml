@@ -46,6 +46,7 @@ jobs:
           files: |
             simplified_geosite.dat
             simplified_geoip.dat
+            simplified_geosite_ru.dat
           draft: false
           prerelease: false
           generate_release_notes: false
@@ -56,7 +57,7 @@ jobs:
       - name: Git push assets to "release" branch
         run: |
           mkdir -p release
-          cp simplified_geosite.dat simplified_geoip.dat release/
+          cp simplified_geosite.dat simplified_geoip.dat simplified_geosite_ru.dat release/
           cd release || exit 1
           git init
           git config --local user.name "github-actions[bot]"
